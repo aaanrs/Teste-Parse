@@ -11,12 +11,12 @@ const Post = ({ username, image, caption, likes }) => {
                 <img src={image} alt="post_pic" className="post_pic" />
             </div>
             <div className="bottom_part">
-                <div>
+                <ul style={{ listStyle: "none" }}>
                     <li><i className="far fa-heart"></i></li>
                     <li><i className="fas fa-location-arrow"></i></li>
                     <li><i className="far fa-comment"></i></li>
                     <li><i className="fas fa-ellipsis-h"></i></li>
-                </div>
+                </ul>
                 <div>
                     <img src={image} alt="liked_by_pic" className="liked_by_pic" />
                     <p className="liked_by">
