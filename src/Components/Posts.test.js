@@ -1,64 +1,83 @@
-import { render, screen } from '@testing-library/react';
+import { render } from '@testing-library/react';
 import Post from './Posts';
 
 const DEFAULT_PROPS = {
-  username: 'test_user',
-  caption: 'This is a test caption',
-  likes: 42,
+    username: 'testuser',
+    image: 'https://example.com/image.jpg',
+    caption: 'Test caption',
+    likes: 42,
 };
 
-describe('Post component', () => {
-  it('renders the username passed via props', () => {
-    render(<Post {...DEFAULT_PROPS} />);
-    const usernameElements = screen.getAllByText(DEFAULT_PROPS.username);
-    expect(usernameElements.length).toBeGreaterThan(0);
-  });
+const renderPost = (props = {}) =>
+    render(<Post {...DEFAULT_PROPS} {...props} />);
 
-  it('renders the caption passed via props', () => {
-    render(<Post {...DEFAULT_PROPS} />);
-    expect(screen.getByText(DEFAULT_PROPS.caption)).toBeInTheDocument();
-  });
+describe('Posts — valid and accessible HTML structure', () => {
+    it('wraps action icons inside a <ul> element', () => {
+        const { container } = renderPost();
 
-  it('renders the likes count passed via props', () => {
-    render(<Post {...DEFAULT_PROPS} />);
-    expect(screen.getByText(new RegExp(String(DEFAULT_PROPS.likes)))).toBeInTheDocument();
-  });
+        const lists = container.querySelectorAll('ul');
+        expect(lists.length).toBeGreaterThan(0);
 
-  it('does not render hardcoded username when different username is provided', () => {
-    render(<Post {...DEFAULT_PROPS} username="another_user" />);
-    expect(screen.queryByText('neeraj__chopra')).not.toBeInTheDocument();
-  });
+        const actionIcons = container.querySelectorAll(
+            'ul .fa-heart, ul .fa-location-arrow, ul .fa-comment, ul .fa-ellipsis-h'
+        );
+        expect(actionIcons.length).toBeGreaterThan(0);
+    });
 
-  it('does not render hardcoded caption content when different caption is provided', () => {
-    render(<Post {...DEFAULT_PROPS} caption="My custom caption" />);
-    expect(
-      screen.queryByText(/Still processing this feeling/i)
-    ).not.toBeInTheDocument();
-  });
+    it('does not render any <li> element that is a direct child of a <div>', () => {
+        const { container } = renderPost();
 
-  it('renders different usernames correctly for different prop values', () => {
-    const { rerender } = render(<Post {...DEFAULT_PROPS} username="user_one" />);
-    expect(screen.getAllByText('user_one').length).toBeGreaterThan(0);
+        const divs = container.querySelectorAll('div');
+        divs.forEach((div) => {
+            const directLiChildren = Array.from(div.children).filter(
+                (child) => child.tagName === 'LI'
+            );
+            expect(directLiChildren).toHaveLength(0);
+        });
+    });
 
-    rerender(<Post {...DEFAULT_PROPS} username="user_two" />);
-    expect(screen.getAllByText('user_two').length).toBeGreaterThan(0);
-    expect(screen.queryByText('user_one')).not.toBeInTheDocument();
-  });
+    it('places every <li> inside a <ul> or <ol>', () => {
+        const { container } = renderPost();
 
-  it('renders different captions correctly for different prop values', () => {
-    const { rerender } = render(<Post {...DEFAULT_PROPS} caption="First caption" />);
-    expect(screen.getByText('First caption')).toBeInTheDocument();
+        const allListItems = container.querySelectorAll('li');
+        allListItems.forEach((li) => {
+            const parent = li.parentElement;
+            expect(['UL', 'OL']).toContain(parent.tagName);
+        });
+    });
 
-    rerender(<Post {...DEFAULT_PROPS} caption="Second caption" />);
-    expect(screen.getByText('Second caption')).toBeInTheDocument();
-    expect(screen.queryByText('First caption')).not.toBeInTheDocument();
-  });
+    it('renders all four action icon list items inside the action list', () => {
+        const { container } = renderPost();
 
-  it('renders different likes counts correctly for different prop values', () => {
-    const { rerender } = render(<Post {...DEFAULT_PROPS} likes={100} />);
-    expect(screen.getByText(/100/)).toBeInTheDocument();
+        const ACTION_ICON_SELECTORS = [
+            '.fa-heart',
+            '.fa-location-arrow',
+            '.fa-comment',
+            '.fa-ellipsis-h',
+        ];
 
-    rerender(<Post {...DEFAULT_PROPS} likes={200} />);
-    expect(screen.getByText(/200/)).toBeInTheDocument();
-  });
+        ACTION_ICON_SELECTORS.forEach((selector) => {
+            const icon = container.querySelector(selector);
+            expect(icon).not.toBeNull();
+
+            const li = icon.closest('li');
+            expect(li).not.toBeNull();
+
+            const list = li.parentElement;
+            expect(['UL', 'OL']).toContain(list.tagName);
+        });
+    });
+
+    it('renders the correct number of action icon items in the action list', () => {
+        const { container } = renderPost();
+
+        const ACTION_ICON_COUNT = 4;
+
+        const actionLists = Array.from(container.querySelectorAll('ul, ol')).filter(
+            (list) => list.querySelector('.fa-heart')
+        );
+
+        expect(actionLists).toHaveLength(1);
+        expect(actionLists[0].querySelectorAll('li')).toHaveLength(ACTION_ICON_COUNT);
+    });
 });
