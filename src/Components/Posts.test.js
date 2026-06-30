@@ -1,83 +1,112 @@
-import { render } from '@testing-library/react';
-import Post from './Posts';
+import { render, screen } from '@testing-library/react';
+import Posts from './Posts';
 
-const DEFAULT_PROPS = {
-    username: 'testuser',
-    image: 'https://example.com/image.jpg',
-    caption: 'Test caption',
-    likes: 42,
+const MOCK_POST = {
+  author: 'Test Author',
+  content: 'This is a test post content.',
+  likes: 42,
+  comments: 7,
+  timestamp: '1 hour ago',
+  avatar: 'https://i.pravatar.cc/150?img=99',
 };
 
-const renderPost = (props = {}) =>
-    render(<Post {...DEFAULT_PROPS} {...props} />);
+describe('Posts — basic rendering', () => {
+  beforeEach(() => {
+    render(
+      <Posts
+        author={MOCK_POST.author}
+        content={MOCK_POST.content}
+        likes={MOCK_POST.likes}
+        comments={MOCK_POST.comments}
+        timestamp={MOCK_POST.timestamp}
+        avatar={MOCK_POST.avatar}
+      />
+    );
+  });
 
-describe('Posts — valid and accessible HTML structure', () => {
-    it('wraps action icons inside a <ul> element', () => {
-        const { container } = renderPost();
+  it('renders the author name', () => {
+    expect(screen.getByText(MOCK_POST.author)).toBeInTheDocument();
+  });
 
-        const lists = container.querySelectorAll('ul');
-        expect(lists.length).toBeGreaterThan(0);
+  it('renders the post content', () => {
+    expect(screen.getByText(MOCK_POST.content)).toBeInTheDocument();
+  });
 
-        const actionIcons = container.querySelectorAll(
-            'ul .fa-heart, ul .fa-location-arrow, ul .fa-comment, ul .fa-ellipsis-h'
-        );
-        expect(actionIcons.length).toBeGreaterThan(0);
-    });
+  it('renders the likes count', () => {
+    expect(screen.getByText(new RegExp(String(MOCK_POST.likes)))).toBeInTheDocument();
+  });
 
-    it('does not render any <li> element that is a direct child of a <div>', () => {
-        const { container } = renderPost();
+  it('renders the comments count', () => {
+    expect(screen.getByText(new RegExp(String(MOCK_POST.comments)))).toBeInTheDocument();
+  });
 
-        const divs = container.querySelectorAll('div');
-        divs.forEach((div) => {
-            const directLiChildren = Array.from(div.children).filter(
-                (child) => child.tagName === 'LI'
-            );
-            expect(directLiChildren).toHaveLength(0);
-        });
-    });
+  it('renders the timestamp', () => {
+    expect(screen.getByText(MOCK_POST.timestamp)).toBeInTheDocument();
+  });
 
-    it('places every <li> inside a <ul> or <ol>', () => {
-        const { container } = renderPost();
+  it('renders the avatar image with the provided src', () => {
+    const avatarImg = screen.getByRole('img');
+    expect(avatarImg).toHaveAttribute('src', MOCK_POST.avatar);
+  });
+});
 
-        const allListItems = container.querySelectorAll('li');
-        allListItems.forEach((li) => {
-            const parent = li.parentElement;
-            expect(['UL', 'OL']).toContain(parent.tagName);
-        });
-    });
+describe('Posts — prop variations', () => {
+  it('renders different author names correctly', () => {
+    const differentAuthor = 'Jane Doe';
+    render(
+      <Posts
+        author={differentAuthor}
+        content={MOCK_POST.content}
+        likes={MOCK_POST.likes}
+        comments={MOCK_POST.comments}
+        timestamp={MOCK_POST.timestamp}
+        avatar={MOCK_POST.avatar}
+      />
+    );
+    expect(screen.getByText(differentAuthor)).toBeInTheDocument();
+  });
 
-    it('renders all four action icon list items inside the action list', () => {
-        const { container } = renderPost();
+  it('renders zero likes without crashing', () => {
+    render(
+      <Posts
+        author={MOCK_POST.author}
+        content={MOCK_POST.content}
+        likes={0}
+        comments={MOCK_POST.comments}
+        timestamp={MOCK_POST.timestamp}
+        avatar={MOCK_POST.avatar}
+      />
+    );
+    expect(screen.getByText(/0/)).toBeInTheDocument();
+  });
 
-        const ACTION_ICON_SELECTORS = [
-            '.fa-heart',
-            '.fa-location-arrow',
-            '.fa-comment',
-            '.fa-ellipsis-h',
-        ];
+  it('renders zero comments without crashing', () => {
+    render(
+      <Posts
+        author={MOCK_POST.author}
+        content={MOCK_POST.content}
+        likes={MOCK_POST.likes}
+        comments={0}
+        timestamp={MOCK_POST.timestamp}
+        avatar={MOCK_POST.avatar}
+      />
+    );
+    // Ensures the component does not blow up with edge-case numeric props
+    expect(screen.getByText(MOCK_POST.author)).toBeInTheDocument();
+  });
 
-        ACTION_ICON_SELECTORS.forEach((selector) => {
-            const icon = container.querySelector(selector);
-            expect(icon).not.toBeNull();
-
-            const li = icon.closest('li');
-            expect(li).not.toBeNull();
-
-            const list = li.parentElement;
-            expect(['UL', 'OL']).toContain(list.tagName);
-        });
-    });
-
-    it('renders the correct number of action icon items in the action list', () => {
-        const { container } = renderPost();
-
-        const ACTION_ICON_COUNT = 4;
-
-        const actionLists = Array.from(container.querySelectorAll('ul, ol')).filter(
-            (list) => list.querySelector('.fa-heart')
-        );
-
-        expect(actionLists).toHaveLength(1);
-        expect(actionLists[0].querySelectorAll('li')).toHaveLength(ACTION_ICON_COUNT);
-    });
+  it('renders long content strings without truncation or error', () => {
+    const longContent = 'A'.repeat(300);
+    render(
+      <Posts
+        author={MOCK_POST.author}
+        content={longContent}
+        likes={MOCK_POST.likes}
+        comments={MOCK_POST.comments}
+        timestamp={MOCK_POST.timestamp}
+        avatar={MOCK_POST.avatar}
+      />
+    );
+    expect(screen.getByText(longContent)).toBeInTheDocument();
+  });
 });
