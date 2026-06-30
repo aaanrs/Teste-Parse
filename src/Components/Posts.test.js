@@ -1,80 +1,72 @@
-import { render } from '@testing-library/react';
-import Posts from './Posts';
+import { render, screen } from '@testing-library/react';
+import Post from './Posts';
 
-describe('Posts — semantic HTML structure for icon list', () => {
-  let container;
+const BASE_PROPS = {
+    author: 'Alice Johnson',
+    content: 'Just had an amazing hike through the mountains!',
+    likes: 142,
+    avatar: 'https://i.pravatar.cc/150?img=1',
+};
 
-  beforeEach(() => {
-    ({ container } = render(<Posts />));
-  });
+describe('Post — basic rendering with required props', () => {
+    it('displays the author name', () => {
+        render(<Post {...BASE_PROPS} />);
 
-  it('renders a .bottom_part element', () => {
-    const bottomPart = container.querySelector('.bottom_part');
-    expect(bottomPart).not.toBeNull();
-  });
-
-  it('renders a <ul> inside .bottom_part', () => {
-    const bottomPart = container.querySelector('.bottom_part');
-    const ul = bottomPart && bottomPart.querySelector('ul');
-    expect(ul).not.toBeNull();
-  });
-
-  it('renders <li> elements only inside a <ul> or <ol> within .bottom_part', () => {
-    const bottomPart = container.querySelector('.bottom_part');
-    expect(bottomPart).not.toBeNull();
-
-    const allLiElements = bottomPart.querySelectorAll('li');
-    expect(allLiElements.length).toBeGreaterThan(0);
-
-    allLiElements.forEach((li) => {
-      const parent = li.parentElement;
-      const parentTag = parent && parent.tagName.toLowerCase();
-      expect(['ul', 'ol']).toContain(parentTag);
+        expect(screen.getByText(BASE_PROPS.author)).toBeInTheDocument();
     });
-  });
 
-  it('does not contain any <li> that is a direct child of .bottom_part', () => {
-    const bottomPart = container.querySelector('.bottom_part');
-    expect(bottomPart).not.toBeNull();
+    it('displays the post content', () => {
+        render(<Post {...BASE_PROPS} />);
 
-    const directLiChildren = Array.from(bottomPart.children).filter(
-      (el) => el.tagName.toLowerCase() === 'li'
-    );
-
-    expect(directLiChildren).toHaveLength(0);
-  });
-
-  it('all icon <i> elements inside .bottom_part are wrapped within <li> elements', () => {
-    const bottomPart = container.querySelector('.bottom_part');
-    expect(bottomPart).not.toBeNull();
-
-    const iElements = bottomPart.querySelectorAll('i');
-    expect(iElements.length).toBeGreaterThan(0);
-
-    iElements.forEach((icon) => {
-      const closestLi = icon.closest('li');
-      expect(closestLi).not.toBeNull();
+        expect(screen.getByText(BASE_PROPS.content)).toBeInTheDocument();
     });
-  });
 
-  it('the <ul> containing icon <li> elements is a descendant of .bottom_part', () => {
-    const bottomPart = container.querySelector('.bottom_part');
-    expect(bottomPart).not.toBeNull();
+    it('displays the likes count', () => {
+        render(<Post {...BASE_PROPS} />);
 
-    const ul = bottomPart.querySelector('ul');
-    expect(ul).not.toBeNull();
-
-    const liItems = ul.querySelectorAll('li');
-    expect(liItems.length).toBeGreaterThan(0);
-  });
-
-  it('no <li> exists outside of a list container anywhere in the rendered output', () => {
-    const allLiElements = container.querySelectorAll('li');
-
-    allLiElements.forEach((li) => {
-      const parent = li.parentElement;
-      const parentTag = parent && parent.tagName.toLowerCase();
-      expect(['ul', 'ol']).toContain(parentTag);
+        expect(screen.getByText(String(BASE_PROPS.likes))).toBeInTheDocument();
     });
-  });
+
+    it('renders the avatar image with the correct src', () => {
+        render(<Post {...BASE_PROPS} />);
+
+        const avatar = screen.getByRole('img');
+
+        expect(avatar).toHaveAttribute('src', BASE_PROPS.avatar);
+    });
+
+    it('renders the avatar image with an accessible alt text containing the author name', () => {
+        render(<Post {...BASE_PROPS} />);
+
+        const avatar = screen.getByRole('img');
+
+        expect(avatar.alt).toContain(BASE_PROPS.author);
+    });
+
+    it('renders without crashing when likes is zero', () => {
+        render(<Post {...BASE_PROPS} likes={0} />);
+
+        expect(screen.getByText('0')).toBeInTheDocument();
+    });
+
+    it('renders without crashing when content is an empty string', () => {
+        const { container } = render(<Post {...BASE_PROPS} content="" />);
+
+        expect(container).toBeInTheDocument();
+    });
+
+    it('displays different author and content when different props are provided', () => {
+        const altProps = {
+            author: 'Bob Martinez',
+            content: 'Finally finished my home renovation project.',
+            likes: 89,
+            avatar: 'https://i.pravatar.cc/150?img=2',
+        };
+
+        render(<Post {...altProps} />);
+
+        expect(screen.getByText(altProps.author)).toBeInTheDocument();
+        expect(screen.getByText(altProps.content)).toBeInTheDocument();
+        expect(screen.getByText(String(altProps.likes))).toBeInTheDocument();
+    });
 });
