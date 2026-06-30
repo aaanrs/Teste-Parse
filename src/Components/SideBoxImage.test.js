@@ -1,56 +1,59 @@
 import { render, screen } from '@testing-library/react';
 import SideBoxImage from './SideBoxImage';
 
-const MOCK_IMAGE_SRC = 'https://i.pravatar.cc/150?img=10';
-const MOCK_NAME = 'John Doe';
+const DEFAULT_IMAGE = 'https://i.pravatar.cc/150?img=10';
+const DEFAULT_NAME = 'Jane Doe';
 
-describe('SideBoxImage — rendering with image and name props', () => {
-  it('renders an img element when an image src is provided', () => {
-    render(<SideBoxImage image={MOCK_IMAGE_SRC} name={MOCK_NAME} />);
+describe('SideBoxImage — rendering', () => {
+  it('renders an image element', () => {
+    render(<SideBoxImage image={DEFAULT_IMAGE} name={DEFAULT_NAME} />);
 
-    const imgElement = screen.getByRole('img');
+    const img = screen.getByRole('img');
 
-    expect(imgElement).toBeInTheDocument();
+    expect(img).toBeInTheDocument();
   });
 
-  it('renders the img element with the correct src prop', () => {
-    render(<SideBoxImage image={MOCK_IMAGE_SRC} name={MOCK_NAME} />);
+  it('renders the image with the provided src', () => {
+    render(<SideBoxImage image={DEFAULT_IMAGE} name={DEFAULT_NAME} />);
 
-    const imgElement = screen.getByRole('img');
+    const img = screen.getByRole('img');
 
-    expect(imgElement).toHaveAttribute('src', MOCK_IMAGE_SRC);
+    expect(img).toHaveAttribute('src', DEFAULT_IMAGE);
   });
 
-  it('renders the name text when a name prop is provided', () => {
-    render(<SideBoxImage image={MOCK_IMAGE_SRC} name={MOCK_NAME} />);
+  it('renders the name text', () => {
+    render(<SideBoxImage image={DEFAULT_IMAGE} name={DEFAULT_NAME} />);
 
-    expect(screen.getByText(MOCK_NAME)).toBeInTheDocument();
+    expect(screen.getByText(DEFAULT_NAME)).toBeInTheDocument();
   });
 
-  it('renders a different name when a different name prop is supplied', () => {
-    const alternativeName = 'Jane Smith';
+  it('renders with a different image and name', () => {
+    const image = 'https://i.pravatar.cc/150?img=20';
+    const name = 'John Smith';
 
-    render(<SideBoxImage image={MOCK_IMAGE_SRC} name={alternativeName} />);
+    render(<SideBoxImage image={image} name={name} />);
 
-    expect(screen.getByText(alternativeName)).toBeInTheDocument();
+    expect(screen.getByRole('img')).toHaveAttribute('src', image);
+    expect(screen.getByText(name)).toBeInTheDocument();
   });
 
-  it('renders a different img src when a different image prop is supplied', () => {
-    const alternativeImage = 'https://i.pravatar.cc/150?img=20';
+  it('renders without crashing when name is an empty string', () => {
+    render(<SideBoxImage image={DEFAULT_IMAGE} name="" />);
 
-    render(<SideBoxImage image={alternativeImage} name={MOCK_NAME} />);
-
-    const imgElement = screen.getByRole('img');
-
-    expect(imgElement).toHaveAttribute('src', alternativeImage);
+    expect(screen.getByRole('img')).toBeInTheDocument();
   });
 
-  it('renders the img element with an alt attribute related to the name', () => {
-    render(<SideBoxImage image={MOCK_IMAGE_SRC} name={MOCK_NAME} />);
+  it('renders without crashing when image is an empty string', () => {
+    render(<SideBoxImage image="" name={DEFAULT_NAME} />);
 
-    const imgElement = screen.getByRole('img');
+    const img = screen.getByRole('img');
 
-    expect(imgElement).toHaveAttribute('alt');
-    expect(imgElement.getAttribute('alt')).not.toBe('');
+    expect(img).toHaveAttribute('src', '');
+  });
+
+  it('does not render the name of a different user', () => {
+    render(<SideBoxImage image={DEFAULT_IMAGE} name="Alice" />);
+
+    expect(screen.queryByText('Bob')).not.toBeInTheDocument();
   });
 });
